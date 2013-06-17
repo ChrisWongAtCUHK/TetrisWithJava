@@ -1,0 +1,1 @@
+jar cvfm tetris.jar MANIFEST.MF -C bin .
