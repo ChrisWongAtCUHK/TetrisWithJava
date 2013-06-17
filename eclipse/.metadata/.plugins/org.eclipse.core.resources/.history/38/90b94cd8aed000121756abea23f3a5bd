@@ -1,0 +1,113 @@
+package tetris;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints ;
+import java.awt.Insets ;
+import java.awt.Toolkit;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JLabel;
+
+// Main program
+public class Main {
+	static final int frameWidth = 600;
+	static final int frameHeight = 600;
+	static final String title = "Tetris with Java";
+	static GridPanel gridPanel;
+	static NextPanel nextPanel;
+	static StatsPanel statsPanel;
+	static CmdPanel cmdPanel;
+	static InfoPanel infoPanel;
+	static Tetris tetris;
+	
+	// Set up the component font and color
+	static void setComponent(Component component, Font font, Color foreground){
+		component.setFont(font);
+		component.setForeground(foreground);
+	}
+	
+	// Add component with GridBagLayout
+	static void addComponent(GridBagConstraints gc, Container container, Component component, int fill, int gridx, int gridy){
+		gc.fill = fill;
+		gc.gridx = gridx;
+		gc.gridy = gridy;
+		
+		container.add(component, gc);
+	}
+	
+	public static void main(String[] args){
+		JFrame frame = new JFrame();
+		frame.setTitle(title);
+		
+		BorderLayout bl = new BorderLayout();
+		frame.setLayout(bl);
+		
+		// Set the background color to black
+		frame.getContentPane().setBackground(Color.black);
+		
+		JLabel jLabel = new JLabel(title, JLabel.CENTER);
+		jLabel.setFont(new Font("Courier", Font.BOLD, 36));
+		jLabel.setForeground(Color.white);
+
+		// Grid panel
+		gridPanel = new GridPanel();
+
+		
+		// Control panel
+		JPanel controlPanel = new JPanel();
+		controlPanel.setLayout(new GridBagLayout());
+		controlPanel.setBackground(Color.black);
+		GridBagConstraints gc = new GridBagConstraints();
+		gc.weighty = 1;
+		
+		// Next panel
+		gc.fill = GridBagConstraints.BOTH;
+		gc.insets = new Insets(20, 20, 20, 20);
+		gc.gridwidth = 1;
+		gc.gridheight = 1;
+		nextPanel = new NextPanel();
+		addComponent(gc, controlPanel, nextPanel, GridBagConstraints.BOTH, 0, 0);
+		
+		// Stats panel
+		gc.fill = GridBagConstraints.BOTH;
+		gc.insets = new Insets(0 ,0 ,0 ,0);
+		statsPanel = new StatsPanel();
+		addComponent(gc, controlPanel, statsPanel, GridBagConstraints.BOTH, 0, 1);
+		
+		gc.fill = GridBagConstraints.BOTH;
+		gc.insets = new Insets(40, 40, 40, 40);
+		cmdPanel = new CmdPanel();
+		addComponent(gc, controlPanel, cmdPanel, GridBagConstraints.BOTH, 0, 2);
+		
+		// Info panel
+		gc.fill = GridBagConstraints.BOTH;
+		gc.insets = new Insets(0, 0, 0, 0);
+		infoPanel = new InfoPanel();
+		addComponent(gc, controlPanel, infoPanel, GridBagConstraints.BOTH, 0, 3);
+		
+		// Main components
+		frame.getContentPane().add(jLabel, BorderLayout.NORTH);
+		frame.getContentPane().setSize(new Dimension(100, 200))
+		frame.getContentPane().add(gridPanel, BorderLayout.CENTER);
+		frame.getContentPane().add(controlPanel, BorderLayout.EAST);
+		
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setSize(frameWidth, frameHeight);
+		
+		// TODO: set 1 to 2 to display the window to center
+		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+		frame.setBounds(((int) screenSize.getWidth() - frameWidth) / 1, 50, frameWidth, frameHeight);
+
+		tetris = new Tetris(gridPanel, nextPanel);
+		frame.setResizable(false);
+		frame.setVisible(true);
+	}
+}

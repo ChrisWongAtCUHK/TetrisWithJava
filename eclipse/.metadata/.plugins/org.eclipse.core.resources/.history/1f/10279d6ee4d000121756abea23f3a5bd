@@ -1,0 +1,40 @@
+package tetris;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Font;
+
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+
+// The stats panel
+public class StatsPanel extends JPanel {
+	private JLabel levelLabel;
+	private JLabel linesLabel;
+	private JLabel scoreLabel;
+
+	// Constructor
+	public StatsPanel(){
+		setLayout(new BorderLayout());
+		setBackground(Color.cyan);
+		levelLabel = new JLabel("Level: 1", JLabel.CENTER);
+		levelLabel.setFont(new Font("Courier", Font.BOLD, 20));
+		levelLabel.setForeground(Color.white);
+		add(levelLabel, BorderLayout.NORTH);
+		
+		linesLabel = new JLabel("Lines: 0", JLabel.CENTER);
+		linesLabel.setFont(new Font("Courier", Font.BOLD, 20));
+		linesLabel.setForeground(Color.white);
+		add(linesLabel, BorderLayout.CENTER);
+		
+		scoreLabel = new JLabel("Score: 0", JLabel.CENTER);
+		scoreLabel.setFont(new Font("Courier", Font.BOLD, 20));
+		scoreLabel.setForeground(Color.white);
+		add(scoreLabel, BorderLayout.SOUTH);
+	}
+	
+	// Set the level
+	public void setLevel(int level){
+		this.levelLabel.setText("Level: " + String.valueOf(level));
+	}
+}

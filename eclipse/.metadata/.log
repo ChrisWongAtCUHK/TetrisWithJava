@@ -1,0 +1,27 @@
+!SESSION 2013-06-05 09:15:44.651 -----------------------------------------------
+eclipse.buildId=M20110909-1335
+java.version=1.7.0_11
+java.vendor=Oracle Corporation
+BootLoader constants: OS=win32, ARCH=x86, WS=win32, NL=en_US
+Command-line arguments:  -os win32 -ws win32 -arch x86
+
+!ENTRY org.eclipse.ui 4 4 2013-06-05 22:06:27.664
+!MESSAGE Invalid preference page path: XML Syntax
+!SESSION 2013-06-08 10:34:34.024 -----------------------------------------------
+eclipse.buildId=M20110909-1335
+java.version=1.7.0_11
+java.vendor=Oracle Corporation
+BootLoader constants: OS=win32, ARCH=x86, WS=win32, NL=en_US
+Command-line arguments:  -os win32 -ws win32 -arch x86
+
+!ENTRY org.eclipse.ui 4 4 2013-06-08 13:23:41.107
+!MESSAGE Invalid preference page path: XML Syntax
+!SESSION 2013-06-09 10:36:02.250 -----------------------------------------------
+eclipse.buildId=M20110909-1335
+java.version=1.7.0_11
+java.vendor=Oracle Corporation
+BootLoader constants: OS=win32, ARCH=x86, WS=win32, NL=en_US
+Command-line arguments:  -os win32 -ws win32 -arch x86
+
+!ENTRY org.eclipse.ui 4 4 2013-06-09 18:28:26.181
+!MESSAGE Invalid preference page path: XML Syntax

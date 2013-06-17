@@ -1,0 +1,488 @@
+package tetris;
+
+import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.util.Arrays;
+
+import javax.swing.JButton;
+
+public class Tetris implements KeyListener, ActionListener {
+	// Shape colors
+	//private static final Color[] colors = {"#eaeaea","#ff6600","#eec900","#0000ff","#cc00ff","#00ff00","#66ccff","#ff0000"};
+	private final Color[] COLORS = {new Color(234, 234, 234), new Color(255, 102, 0), new Color(238, 201, 0), new Color(0, 0, 255), new Color(204, 0, 255), new Color(0, 255, 0), new Color(102, 204, 255), new Color(255, 0, 0)};
+	private final Color WHITE = new Color(204, 204, 204);
+
+	// Starting line for each shape
+	private static final int[] STARTAT = {0, -1, -1, -1, 0, -1, -1, 0};
+	//private static final int[] STARTAT = {0, 0, 0, 0, 1, 0, 0, 1};
+	
+	// Points per number of lines
+	private static final int[] POINTS = {0, 40, 100, 300, 1200};
+	
+	// Combinations of each shape
+	private static final int[][][][] SHAPES = {
+			// none
+			{},
+			// I
+			{{{0,0,0,0},{1,1,1,1},{0,0,0,0},{0,0,0,0}},
+			 {{0,1,0,0},{0,1,0,0},{0,1,0,0},{0,1,0,0}}},
+			// T
+			{{{0,0,0,0},{1,1,1,0},{0,1,0,0},{0,0,0,0}},
+			 {{0,1,0,0},{1,1,0,0},{0,1,0,0},{0,0,0,0}},
+			 {{0,1,0,0},{1,1,1,0},{0,0,0,0},{0,0,0,0}},
+			 {{0,1,0,0},{0,1,1,0},{0,1,0,0},{0,0,0,0}}},
+			// L
+			{{{0,0,0,0},{1,1,1,0},{1,0,0,0},{0,0,0,0}},
+			 {{1,1,0,0},{0,1,0,0},{0,1,0,0},{0,0,0,0}},
+			 {{0,0,1,0},{1,1,1,0},{0,0,0,0},{0,0,0,0}},
+			 {{0,1,0,0},{0,1,0,0},{0,1,1,0},{0,0,0,0}}},
+			// J
+			{{{1,0,0,0},{1,1,1,0},{0,0,0,0},{0,0,0,0}},
+			 {{0,1,1,0},{0,1,0,0},{0,1,0,0},{0,0,0,0}},
+			 {{0,0,0,0},{1,1,1,0},{0,0,1,0},{0,0,0,0}},
+			 {{0,1,0,0},{0,1,0,0},{1,1,0,0},{0,0,0,0}}},
+			// Z
+			{{{0,0,0,0},{1,1,0,0},{0,1,1,0},{0,0,0,0}},
+			 {{0,0,1,0},{0,1,1,0},{0,1,0,0},{0,0,0,0}}},
+			// S
+			{{{0,0,0,0},{0,1,1,0},{1,1,0,0},{0,0,0,0}},
+			 {{0,1,0,0},{0,1,1,0},{0,0,1,0},{0,0,0,0}}},
+			// O
+			{{{0,1,1,0},{0,1,1,0},{0,0,0,0},{0,0,0,0}}}
+		};
+	
+	private static final int[][] GRID_ORIGINAL = {
+		{1,0,0,0,0,0,0,0,0,0,0,1},{1,0,0,0,0,0,0,0,0,0,0,1},
+		{1,0,0,0,0,0,0,0,0,0,0,1},{1,0,0,0,0,0,0,0,0,0,0,1},
+		{1,0,0,0,0,0,0,0,0,0,0,1},{1,0,0,0,0,0,0,0,0,0,0,1},
+		{1,0,0,0,0,0,0,0,0,0,0,1},{1,0,0,0,0,0,0,0,0,0,0,1},
+		{1,0,0,0,0,0,0,0,0,0,0,1},{1,0,0,0,0,0,0,0,0,0,0,1},
+		{1,0,0,0,0,0,0,0,0,0,0,1},{1,0,0,0,0,0,0,0,0,0,0,1},
+		{1,0,0,0,0,0,0,0,0,0,0,1},{1,0,0,0,0,0,0,0,0,0,0,1},
+		{1,0,0,0,0,0,0,0,0,0,0,1},{1,0,0,0,0,0,0,0,0,0,0,1},
+		{1,0,0,0,0,0,0,0,0,0,0,1},{1,0,0,0,0,0,0,0,0,0,0,1},
+		{1,1,1,1,1,1,1,1,1,1,1,1}};
+	
+	// Stats
+	private int level;
+	private int lines;
+	private int score;
+	private int finishedLines;
+	// Array which contains data of the grid
+	private int[][] grid = new int[GRID_ORIGINAL.length][GRID_ORIGINAL[0].length];
+	
+	private int cur;
+	private int next;
+	private int x, y, r, x0, y0, r0;
+
+	private int[][][] curShape;
+	private JButton[][] cells;
+	private JButton[][] nextCells;
+
+	private Thread moveDownThread;
+	private boolean isContinue = true;
+	
+	private GridPanel gridPanel;
+	private StatsPanel statsPanel;
+	private JButton startButton;
+	private JButton stopButton;
+	private Boolean isPause;
+	private Boolean isPauseLock;
+	
+	// Debug
+	private int temp;
+	private final int tempControl = 1000;
+	private String tempCurShape = "";
+	private String tempGrid = "";
+	
+	// Constructor
+	public Tetris(GridPanel gridPanel, NextPanel nextPanel, JButton startButton, JButton stopButton, StatsPanel statsPanel){
+		
+		this.gridPanel = gridPanel;
+		this.statsPanel = statsPanel;
+		this.cells = gridPanel.getCells();
+		this.nextCells = nextPanel.getCells();
+		this.gridPanel.setFocusable(true);
+		this.gridPanel.addKeyListener(this);
+		this.startButton = startButton;
+		this.startButton.addActionListener(this);
+		this.stopButton = stopButton;
+		isPause = new Boolean(false); 
+	    isPauseLock = new Boolean(false); 
+
+	}
+	
+	// Initialize to start the game
+	public void start(){
+		// Stats
+		this.level = 0;
+		this.lines = 0;
+		this.score = 0;
+		
+		for (int i = 0; i < GRID_ORIGINAL.length; ++i) {
+			this.grid[i] = Arrays.copyOf(GRID_ORIGINAL[i], GRID_ORIGINAL[i].length);
+		}
+
+		this.gridPanel.allWhite();
+		this.next = newShape();
+		shift();
+		refresh();
+
+		moveDownThread = new Thread(new Runnable(){
+			public void run(){
+				temp = 0;
+				while(true){
+
+					try {
+						Thread.sleep(1000);
+						 while (isPause == Boolean.TRUE) { 
+							  
+						        try { 
+						            // Mutex lock 
+						        	synchronized (isPauseLock) { 
+						            isPauseLock.wait(); 
+						        } 
+						    } catch (InterruptedException e) { 
+						        e.printStackTrace(); 
+						    } 
+						} 
+						if(!isContinue){
+							break;
+						}
+						moveDown();
+						++temp;
+					} catch (InterruptedException e) {
+						
+						System.out.println("Exit the thread");
+					}
+					
+				}
+			}
+		});
+		moveDownThread.start();
+		
+		this.startButton.setText("pause");
+		this.stopButton.addActionListener(this);
+		this.gridPanel.setFocusable(true);
+		this.gridPanel.requestFocus();
+		
+	}
+	
+	// Define the action to be fired depending on key entry
+	public void key(){
+		
+	}
+	
+	// Generate an random shape
+	public int newShape(){
+		int r = (int)(1 + Math.random() * 7);
+		return (r > 7 ? 7 : r);
+		//return 1;
+	}
+	
+	// Define then draw the next shape
+	public void setNext(){
+		int[][] s;
+		Color c, d, n = this.COLORS[0];
+		this.next = this.newShape();
+		s = this.SHAPES[this.next][0];
+		c = this.COLORS[this.next];
+		for (int i = 0; i < 4; ++i) {
+			for (int j = 0; j < 4; ++j) {
+				d = s[i][j] != 0 ? c : n;
+				this.nextCells[j][i].setBackground(d);
+			}
+		}
+		
+	}
+	
+	// The next shape becomes the current one; reset coordinates
+	public boolean shift(){
+		this.cur = this.next;
+		this.x = this.x0 = 4;
+		this.y = this.STARTAT[this.cur];
+		this.y0 = this.y - 2;
+		this.r = this.r0 = 0;
+		this.curShape = this.SHAPES[this.cur];
+
+		if (this.canGo(0, this.x, this.y)) {
+			this.setNext();
+			return true;
+		}
+		return false;
+	}
+	
+	// Pause the game
+	public void pause(){
+		this.startButton.setText("resume");
+		this.gridPanel.setFocusable(false);
+		isPause = Boolean.TRUE; 
+	}
+	
+	// Resume the game
+	public void resume(){
+		this.startButton.setText("pause");
+		this.gridPanel.setFocusable(true);
+		this.gridPanel.requestFocus();
+		isPause = Boolean.FALSE; 
+		
+		// Wake the thread up 
+        synchronized (isPauseLock) { 
+            isPauseLock.notify(); 
+        }; 
+	}
+	
+	// Stop the game
+	public void gameOver(){
+		// Manage buttons
+		if (this.moveDownThread.isAlive()) {
+			//$(tetris.bound).unkeypress(tetris.key);
+			
+			//window.clearInterval(tetris.timer);
+			//tetris.timer = null;
+			this.clearInterval();
+			//$('#start').unclick(tetris.pause).val('start').click(tetris.start);
+		} else {
+			//$('#start').unclick(tetris.resume).val('start').click(tetris.start);
+		}
+		//$('#stop').set('disabled', true);
+		this.startButton.setText("start");
+		this.stopButton.removeActionListener(this);
+		// Draw everything in white
+		for (int i = 0; i < 18; ++i) {
+			for (int j = 1; j < 11; ++j) {
+				if (this.grid[i][j] != 0) {
+					this.cells[j - 1][i].setBackground(WHITE);				// minus 1 because the original source is 1-10 instead of 0-9
+				}
+			}
+		}
+		//console.log("gameOver?");
+		draw(this.r0, this.x0, this.y0, WHITE);
+
+	}
+	
+	// Check overlays
+	public boolean canGo(int r, int x, int y){
+		//System.out.println("canGo checking...");
+		try {
+			for (int i = 0; i < 4; ++i) {
+				for (int j = 0; j < 4; ++j) {	
+					if((this.curShape[r][j][i] != 0) && (this.grid[y + j] != null) && (this.grid[y + j][x + i] != 0)){
+						return false;
+					}
+				}
+			}
+		} catch (ArrayIndexOutOfBoundsException aiobe){
+			System.out.println("Negative index of array");
+		}
+		return true;
+	}
+	
+	// Move the current shape to the left
+	public void moveLeft(){
+		if (canGo(this.r, this.x - 1, this.y)) {
+			--this.x;
+			refresh();
+		}
+		
+	}
+	
+	// Move the current shape to the right
+	public void moveRight(){
+		if (canGo(this.r, this.x + 1, this.y)) {
+			++this.x;
+			refresh();
+		}
+	}
+	
+	// Rotate the current shape
+	public void rotate(){
+		int r = this.r == this.curShape.length - 1 ? 0 : this.r + 1;
+		if (canGo(r, this.x, this.y)) {
+			this.r0 = this.r;
+			this.r = r;
+			refresh();
+		}
+	}
+	
+	// Move down the current shape
+	synchronized public void moveDown(){
+		if (canGo(this.r, this.x, this.y + 1)) {
+			++this.y;
+			refresh();
+		} else {
+			touchDown();
+		}
+	}
+	
+	// The current shape touches down
+	public void touchDown(){
+		// mark the grid
+		for (int i = 0; i < 4; ++i) {
+			for (int j = 0; j < 4; ++j) {
+				if ((this.curShape[this.r][j][i] != 0) && (this.grid[this.y + j] != null)) {
+					this.grid[this.y + j][this.x + i] = this.cur;
+				}
+			}
+		}
+		
+		// search complete lines
+		this.finishedLines = 0;
+		for (int i = 17, k = 17; i > -1 && this.finishedLines < 4; --i, --k) {
+			// Check if all tiles are occupied(1)
+			boolean allOccupied = true;
+			for(int j = 0; j < this.grid[i].length; ++j){
+				if(this.grid[i][j] == 0){
+					allOccupied = false;
+					break;
+				}
+			}
+			if (allOccupied) {
+				// Complete lines become white
+				for (int j = 0; j < 10; ++j) {
+					this.cells[j][k].setBackground(WHITE);
+				}
+				++this.finishedLines;
+				
+				// Update the grid
+				System.out.println("Update the grid");
+				for (int j = i; j > 0; --j) {
+					//tetris.grid[j] = tetris.grid[j - 1].concat();
+					this.grid[j] = Arrays.copyOf(this.grid[j - 1], this.grid[j - 1].length);
+				}
+				++i;
+			}
+		}
+		// animate
+		if (this.finishedLines != 0) {
+			//window.clearInterval(tetris.timer);
+			//tetris.timer = window.setTimeout(function(){tetris.after(f);}, 100);
+			Thread afterThread = new Thread(new Runnable(){
+				public void run(){
+					after();
+				}
+			});
+			afterThread.start();
+		}
+		// try to continue
+		if (this.shift()) {
+			refresh();
+		} else {
+			gameOver();
+		}
+	}
+	
+	public void clearInterval(){
+		this.moveDownThread.interrupt();
+		this.isContinue = false;
+	}
+	
+	// Finish the touch down process
+	public void after(){
+		System.out.println("finishedLines=" + this.finishedLines);
+		int l = (this.level < 20 ? this.level : 20) * 25;
+		// stats
+		this.lines += finishedLines;
+		this.statsPanel.setLines(this.lines);
+		
+		if ((this.lines % 10) == 0) {
+			this.level = this.lines / 10;
+			this.statsPanel.setLevel(this.level);
+		}
+
+		this.score += (this.level + 1) * this.POINTS[this.finishedLines];
+		this.statsPanel.setScore(this.score);
+		// redraw the grid
+	
+		for (int i = 0; i < 18; ++i) {
+			for (int j = 1; j < 11; ++j) {
+				this.cells[j - 1][i].setBackground(this.COLORS[this.grid[i][j]]);	
+			}
+		}
+		refresh();
+		finishedLines = 0;
+		
+	}
+	
+	// Draw the current shape
+	public void draw(int r, int x, int y, Color color){
+		try {
+			for(int i = 0; i < 4; ++i){
+				for(int j = 0; j < 4; ++j){
+					if(this.curShape[r][j][i] != 0){
+						this.cells[i + x - 1][j + y].setBackground(color);	// minus 1 because the original source is 1-10 instead of 0-9
+					}
+				}
+				
+			}
+		} catch (ArrayIndexOutOfBoundsException aiobe){
+			System.out.println("Negative index of array");
+		}
+	}
+	
+	// Refresh the grid
+	public void refresh(){
+		// remove from the old position
+		draw(this.r0, this.x0, this.y0, this.COLORS[0]);
+
+		// draw to the next one
+		draw(this.r, this.x, this.y, this.COLORS[this.cur]);
+		
+		// reset coordinates
+		this.x0 = this.x;
+		this.y0 = this.y;
+		this.r0 = this.r;
+		
+	}
+	
+	// Handle the key typed event
+	public void keyTyped(KeyEvent e) {
+		
+	}
+
+	// Handle the key pressed event */
+	public void keyPressed(KeyEvent e) {
+		
+		switch(e.getKeyCode()){
+			case 37:
+				moveLeft();
+				break;
+			case 38:
+				rotate();
+				break;
+			case 39:
+				moveRight();
+				break;
+			case 40:
+				moveDown();
+				break;
+			default:
+				break;
+				
+		}
+	}
+
+	// Handle the key released event  
+	public void keyReleased(KeyEvent e) {
+
+	}
+
+	// Handle the button click.
+	public void actionPerformed(ActionEvent e) {
+		System.out.println(e.getActionCommand());
+		
+		// Request the focus to the jpanel for key listener
+		if(e.getActionCommand().equals("start")){
+			this.start();
+		} else if(e.getActionCommand().equals("pause")){
+			this.pause();
+		} else if(e.getActionCommand().equals("resume")){
+			this.resume();
+		} else if(e.getActionCommand().equals("stop")){
+			this.gameOver();
+		}
+	}
+}
